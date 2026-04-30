@@ -28,7 +28,7 @@ FitNag is a mobile fitness application built with Flutter that combines personal
 | State Management | Riverpod 2.x (FutureProvider, StreamProvider, StateNotifierProvider) |
 | Database | Drift ORM + SQLite (18 tables, schema v5) |
 | Routing | GoRouter 14.x with ShellRoute (bottom nav) |
-| Notifications | flutter_local_notifications + android_alarm_manager_plus |
+| Notifications | flutter_local_notifications + timezone (zonedSchedule) |
 | Audio | audioplayers 6.x |
 | Charts | fl_chart |
 | Calendar | table_calendar |
@@ -38,7 +38,7 @@ FitNag is a mobile fitness application built with Flutter that combines personal
 
 ```
 lib/
-├── main.dart                    # Entry point: orientation lock, DB seed, metronome init
+├── main.dart                    # Entry point: orientation lock, DB seed, metronome + notification init
 ├── app.dart                     # Root widget (FitNagApp), router initialization
 ├── core/
 │   ├── constants/               # XP values, enums (BodyPart, Equipment…), league tiers
@@ -118,9 +118,8 @@ See [ARCHITECTURE.md](ARCHITECTURE.md) for detailed documentation covering the l
 
 ## Known Limitations
 
-1. **Notifications are in-process only** — `NagScheduler` uses `Future.delayed`, so notifications are silently dropped if the app process is killed before delivery. A proper fix requires `FlutterLocalNotificationsPlugin.zonedSchedule()` with the `timezone` package.
-2. **No dependency injection for the database** — `AppDatabase.instance` is accessed directly inside providers, making unit testing of providers difficult without a real SQLite file.
-3. **Single-user design** — the database schema supports only one user row (created via `UserDao.getOrCreateUser()`). Multi-profile support would require a schema migration.
+1. **No dependency injection for the database** — `AppDatabase.instance` is accessed directly inside providers, making unit testing of providers difficult without a real SQLite file.
+2. **Single-user design** — the database schema supports only one user row (created via `UserDao.getOrCreateUser()`). Multi-profile support would require a schema migration.
 
 ## Contributing
 

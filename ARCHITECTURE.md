@@ -136,12 +136,12 @@ features/<name>/
 - `AddMeasurementScreen` — 10-field form; awards XP on save; awards `first_measurement` badge
 
 #### `notifications/`
-- `NagScheduler` — maps up to 5 `NotificationWindow` time ranges to escalation levels 1–5; falls back to fixed offsets from `preferredHour`
+- `NagScheduler` — maps up to 5 `NotificationWindow` time ranges to escalation levels 1–5; falls back to fixed offsets from `preferredHour`. Uses `FlutterLocalNotificationsPlugin.zonedSchedule` (OS-level alarm via `timezone` package) so notifications survive app backgrounding and reboots. Requests `POST_NOTIFICATIONS` runtime permission on Android 13+.
 
 #### `onboarding/`
 - 6–7 step flow (difficulty → training focus → equipment → body parts → schedule → profile)
 - `OnboardingNotifier` (StateNotifier) — accumulates state; `completeOnboarding()` persists everything in one pass
-- Triggers `PlanGenerator.generateAndSavePlan()` on completion
+- Triggers `PlanGenerator.generateAndSavePlan()` + `NagScheduler.requestPermission()` + `NagScheduler.scheduleNags()` on completion
 
 #### `settings/`
 - Equipment selection, schedule mode, notification windows editor, plan regeneration, health disclaimer
@@ -304,7 +304,6 @@ Promotion/demotion requires 2 consecutive recalculations above/below threshold.
 
 | # | Issue | Location | Impact |
 |---|-------|----------|--------|
-| 1 | **In-process notifications** — `Future.delayed` drops notifications when the app is killed | `NagScheduler._scheduleNotification()` | High: core feature unreliable on Android |
-| 2 | **Singleton DB access** — 45+ direct `AppDatabase.instance` calls inside providers | All providers | Medium: makes unit testing providers without real SQLite impossible |
-| 3 | **Minimal test coverage** — only 3 unit tests (`BmiCalculator`) | `test/widget_test.dart` | Medium: critical flows (XP calc, plan gen, league) have no regression protection |
-| 4 | **Calendar performance** — `ScheduleHelper.getWorkoutDaysInMonth` makes up to 30 async DB calls for adaptive schedule mode | `CalendarNotifier.loadMonth()` | Low: noticeable on slow devices in adaptive mode |
+| 1 | **Singleton DB access** — 45+ direct `AppDatabase.instance` calls inside providers | All providers | Medium: makes unit testing providers without real SQLite impossible |
+| 2 | **Minimal test coverage** — only 3 unit tests (`BmiCalculator`) | `test/widget_test.dart` | Medium: critical flows (XP calc, plan gen, league) have no regression protection |
+| 3 | **Calendar performance** — `ScheduleHelper.getWorkoutDaysInMonth` makes up to 30 async DB calls for adaptive schedule mode | `CalendarNotifier.loadMonth()` | Low: noticeable on slow devices in adaptive mode |
