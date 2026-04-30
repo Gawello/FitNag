@@ -44,6 +44,10 @@ class SettingsScreen extends ConsumerWidget {
                 value: user.notificationsEnabled,
                 activeTrackColor: AppTheme.primaryOrange,
                 onChanged: (enabled) async {
+                  if (enabled) {
+                    final granted = await NagScheduler.requestPermission();
+                    if (!granted) return;
+                  }
                   await UserDao(AppDatabase.instance).updateUser(
                     UsersCompanion(notificationsEnabled: Value(enabled)),
                   );

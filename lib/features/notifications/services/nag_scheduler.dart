@@ -1,8 +1,11 @@
 import 'dart:math';
 
 import 'package:flutter_local_notifications/flutter_local_notifications.dart';
+import 'package:timezone/timezone.dart' as tz;
+import 'package:timezone/data/latest_all.dart' as tz;
 
 import '../../../core/constants/notification_messages.dart';
+import '../../../core/utils/app_logger.dart';
 import '../../../core/utils/schedule_helper.dart';
 import '../../../database/app_database.dart';
 import '../../../database/daos/user_dao.dart';
@@ -12,25 +15,87 @@ import '../../../database/daos/notification_dao.dart';
 
 /// Schedules workout reminder notifications with 5-level urgency escalation.
 ///
+/// Notifications are delivered via [FlutterLocalNotificationsPlugin.zonedSchedule],
+/// which schedules an OS-level alarm that survives app backgrounding and device
+/// reboots (when [RECEIVE_BOOT_COMPLETED] is declared in AndroidManifest.xml
+/// and the plugin's boot receiver is registered).
+///
 /// On each workout day (when [User.notificationsEnabled] is true), schedules
 /// one notification per configured [NotificationWindow], mapping windows to
 /// escalation levels 1 (friendly) through 5 (emergency). Falls back to a
 /// fixed offset schedule when no windows are configured.
 ///
-/// **Known limitation**: Uses [Future.delayed] — notifications are process-bound
-/// and will be silently dropped if the app is killed before delivery. For
-/// reliable background delivery, migrate to
-/// `FlutterLocalNotificationsPlugin.zonedSchedule()` with the `timezone` package.
+/// Call [initialize] once at app startup before any other method.
 class NagScheduler {
   NagScheduler._();
 
   static final FlutterLocalNotificationsPlugin _notifications =
       FlutterLocalNotificationsPlugin();
 
+  static const _channelId = 'fitnag_nags';
+  static const _channelName = 'Workout Reminders';
+  static const _channelDescription = 'FitNag workout reminders and nags';
+
+  /// Initializes the plugin and timezone database.
+  ///
+  /// Must be called in [main] before [runApp].
   static Future<void> initialize() async {
+    tz.initializeTimeZones();
+
     const androidSettings = AndroidInitializationSettings('@mipmap/ic_launcher');
     const initSettings = InitializationSettings(android: androidSettings);
-    await _notifications.initialize(initSettings);
+
+    await _notifications.initialize(
+      initSettings,
+      onDidReceiveNotificationResponse: _onNotificationTap,
+    );
+
+    await _createChannel();
+  }
+
+  static void _onNotificationTap(NotificationResponse response) {
+    AppLogger.debug(
+      'Notification tapped: id=${response.id} payload=${response.payload}',
+      tag: 'NagScheduler',
+    );
+  }
+
+  /// Creates the Android notification channel with HIGH importance.
+  ///
+  /// Safe to call multiple times — Android deduplicates by channel ID.
+  static Future<void> _createChannel() async {
+    const channel = AndroidNotificationChannel(
+      _channelId,
+      _channelName,
+      description: _channelDescription,
+      importance: Importance.high,
+      playSound: true,
+      enableVibration: true,
+    );
+
+    await _notifications
+        .resolvePlatformSpecificImplementation<
+            AndroidFlutterLocalNotificationsPlugin>()
+        ?.createNotificationChannel(channel);
+  }
+
+  /// Requests the POST_NOTIFICATIONS runtime permission on Android 13+.
+  ///
+  /// Returns true if permission was granted or not needed (API < 33).
+  static Future<bool> requestPermission() async {
+    final androidImpl = _notifications
+        .resolvePlatformSpecificImplementation<
+            AndroidFlutterLocalNotificationsPlugin>();
+    if (androidImpl == null) return true;
+
+    final granted = await androidImpl.requestNotificationsPermission();
+    if (granted != true) {
+      AppLogger.warning(
+        'POST_NOTIFICATIONS permission not granted by user',
+        tag: 'NagScheduler',
+      );
+    }
+    return granted ?? false;
   }
 
   static Future<void> scheduleNags() async {
@@ -43,7 +108,6 @@ class NagScheduler {
     final user = await userDao.getOrCreateUser();
     if (!user.notificationsEnabled) return;
 
-    // Cancel all existing notifications
     await _notifications.cancelAll();
 
     final workedOutToday = await workoutDao.hasWorkoutToday(user.id);
@@ -54,7 +118,7 @@ class NagScheduler {
     final streak = await gamificationDao.getOrCreateStreak(user.id);
 
     if (!isWorkoutDay) {
-      // Rest day - single friendly message
+      // Rest day — single friendly message
       final baseTime = DateTime(now.year, now.month, now.day, user.preferredHour, user.preferredMinute);
       await _scheduleNotification(
         id: 100,
@@ -65,18 +129,15 @@ class NagScheduler {
       return;
     }
 
-    // Get notification windows
     final windows = await notificationDao.getWindows(user.id);
     final recentMessages = await notificationDao.getRecentMessages(user.id, 1);
     final midnight = DateTime(now.year, now.month, now.day + 1);
 
     if (windows.isEmpty) {
-      // Fallback to legacy single-time nags
       await _scheduleLegacyNags(user, streak, recentMessages, now, midnight);
       return;
     }
 
-    // Schedule one nag per window with escalating urgency
     final messageLevels = _mapWindowsToLevels(windows.length);
     final rng = Random();
 
@@ -85,7 +146,6 @@ class NagScheduler {
       final level = messageLevels[i];
       final messages = _messagesForLevel(level);
 
-      // Pick random time within window
       final windowStart = DateTime(now.year, now.month, now.day, window.startHour, window.startMinute);
       final windowEnd = DateTime(now.year, now.month, now.day, window.endHour, window.endMinute);
       final windowDuration = windowEnd.difference(windowStart);
@@ -129,7 +189,6 @@ class NagScheduler {
     }
   }
 
-  /// Legacy single-time nag scheduling (fallback when no windows configured)
   static Future<void> _scheduleLegacyNags(
     User user,
     Streak streak,
@@ -179,7 +238,6 @@ class NagScheduler {
     }
   }
 
-  /// Maps number of windows to escalation levels (1-5)
   static List<int> _mapWindowsToLevels(int windowCount) {
     return switch (windowCount) {
       1 => [1],
@@ -219,7 +277,7 @@ class NagScheduler {
     );
   }
 
-  /// Create a default notification window from user's preferred time.
+  /// Creates a default notification window from user's preferred time.
   static Future<void> createDefaultWindow(int userId) async {
     final db = AppDatabase.instance;
     final notificationDao = NotificationDao(db);
@@ -251,35 +309,54 @@ class NagScheduler {
     return candidates[rng.nextInt(candidates.length)];
   }
 
+  /// Schedules a notification at [scheduledTime] using the OS alarm system.
+  ///
+  /// Uses [zonedSchedule] so the notification survives app backgrounding
+  /// and device reboots. Requires the boot receiver and exact-alarm permission
+  /// declared in AndroidManifest.xml.
   static Future<void> _scheduleNotification({
     required int id,
     required String title,
     required String body,
     required DateTime scheduledTime,
   }) async {
-    final delay = scheduledTime.difference(DateTime.now());
-    if (delay.isNegative) return;
+    if (scheduledTime.isBefore(DateTime.now())) return;
 
-    // ARCHITECTURAL LIMITATION: Future.delayed is bound to the Dart process
-    // lifetime. If the app is killed before [scheduledTime], the notification
-    // is never delivered. Fix: migrate to FlutterLocalNotificationsPlugin
-    // .zonedSchedule() with the 'timezone' package for true background delivery.
-    Future.delayed(delay, () async {
-      await _notifications.show(
+    final tzTime = tz.TZDateTime.from(scheduledTime, tz.local);
+
+    try {
+      await _notifications.zonedSchedule(
         id,
         title,
         body,
+        tzTime,
         const NotificationDetails(
           android: AndroidNotificationDetails(
-            'fitnag_nags',
-            'Workout Reminders',
-            channelDescription: 'FitNag workout reminders and nags',
+            _channelId,
+            _channelName,
+            channelDescription: _channelDescription,
             importance: Importance.high,
             priority: Priority.high,
             icon: '@mipmap/ic_launcher',
+            playSound: true,
+            enableVibration: true,
           ),
         ),
+        androidScheduleMode: AndroidScheduleMode.exactAllowWhileIdle,
+        uiLocalNotificationDateInterpretation:
+            UILocalNotificationDateInterpretation.absoluteTime,
+        payload: 'nag_$id',
       );
-    });
+      AppLogger.debug(
+        'Scheduled nag #$id at $scheduledTime',
+        tag: 'NagScheduler',
+      );
+    } catch (e) {
+      AppLogger.warning(
+        'Failed to schedule notification #$id at $scheduledTime',
+        tag: 'NagScheduler',
+        error: e,
+      );
+    }
   }
 }

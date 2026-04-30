@@ -6,6 +6,7 @@ import '../../../core/constants/exercise_constants.dart';
 import '../../../core/theme/app_theme.dart';
 import '../providers/onboarding_provider.dart';
 import '../../../core/utils/app_logger.dart';
+import '../../../features/notifications/services/nag_scheduler.dart';
 import '../../../features/workouts/logic/plan_generator.dart';
 
 class OnboardingScreen extends ConsumerWidget {
@@ -513,6 +514,8 @@ class _ProfileStepState extends State<_ProfileStep> {
     try {
       await widget.notifier.completeOnboarding();
       await PlanGenerator.generateAndSavePlan();
+      await NagScheduler.requestPermission();
+      await NagScheduler.scheduleNags();
       if (mounted) {
         widget.ref.invalidate(onboardingCompleteProvider);
         context.go('/');

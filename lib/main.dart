@@ -6,6 +6,7 @@ import 'app.dart';
 import 'database/app_database.dart';
 import 'database/daos/exercise_dao.dart';
 import 'database/daos/gamification_dao.dart';
+import 'features/notifications/services/nag_scheduler.dart';
 import 'features/workouts/services/tempo_metronome.dart';
 import 'seed/exercise_seed_data.dart';
 import 'seed/badge_seed_data.dart';
@@ -17,6 +18,7 @@ void main() async {
   final db = AppDatabase.instance;
   await _seedDataIfNeeded(db);
   await TempoMetronome.initialize();
+  await NagScheduler.initialize();
 
   runApp(const ProviderScope(child: FitNagApp()));
 }
