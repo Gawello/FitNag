@@ -190,7 +190,7 @@ class TempoMetronome {
 
   static Future<void> _playTickSound() async {
     if (_vibrationEnabled) {
-      HapticFeedback.lightImpact();
+      await HapticFeedback.lightImpact();
     }
 
     if (_soundSet == MetronomeSoundSet.vibrationOnly) return;
@@ -200,7 +200,7 @@ class TempoMetronome {
 
   static Future<void> _playPhaseSound() async {
     if (_vibrationEnabled) {
-      HapticFeedback.heavyImpact();
+      await HapticFeedback.heavyImpact();
     }
 
     if (_soundSet == MetronomeSoundSet.vibrationOnly) return;
