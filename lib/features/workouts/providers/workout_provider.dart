@@ -314,10 +314,11 @@ class ActiveWorkoutNotifier extends StateNotifier<ActiveWorkoutState> {
     state = state.copyWith(exerciseGroups: groups);
 
     // Persist set to DB immediately
-    if (state.sessionId != null) {
+    final sessionId = state.sessionId;
+    if (sessionId != null) {
       final db = AppDatabase.instance;
       final workoutDao = WorkoutDao(db);
-      final dbSets = await workoutDao.getSessionSets(state.sessionId!);
+      final dbSets = await workoutDao.getSessionSets(sessionId);
       final matching = dbSets.where((s) =>
           s.exerciseId == group.exercise.id && s.setNumber == set.setNumber);
       if (matching.isNotEmpty) {
