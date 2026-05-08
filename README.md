@@ -112,6 +112,22 @@ flutter build appbundle --release
 flutter build ios --release
 ```
 
+## Documentation
+
+The `docs/` folder is the canonical spec for product behavior, mechanics, and engineering workflow. Start with [`docs/README.md`](docs/README.md) for the index. Highlights:
+
+- [docs/PRODUCT.md](docs/PRODUCT.md) — product principles, target user, non-goals
+- [docs/USER_JOURNEY.md](docs/USER_JOURNEY.md) — first-run, daily and weekly loops, edge cases
+- [docs/GAMIFICATION.md](docs/GAMIFICATION.md) — XP formulas, levels, streaks, badges, leagues
+- [docs/NOTIFICATIONS.md](docs/NOTIFICATIONS.md) — 5-level escalation, windows, Android plumbing
+- [docs/METRONOME.md](docs/METRONOME.md) — tempo notation, 4-phase cycle, sound sets
+- [docs/PLAN_GENERATOR.md](docs/PLAN_GENERATOR.md) — split selection, exercise filtering, ordering
+- [docs/DEVELOPMENT.md](docs/DEVELOPMENT.md) — local setup, schema migrations, conventions
+- [docs/TESTING.md](docs/TESTING.md) — current state and recommended targets
+- [docs/TROUBLESHOOTING.md](docs/TROUBLESHOOTING.md) — common dev and runtime issues
+- [docs/RELEASE.md](docs/RELEASE.md) — pre-release checklist and build commands
+- [docs/GLOSSARY.md](docs/GLOSSARY.md) — domain terms
+
 ## Architecture
 
 See [ARCHITECTURE.md](ARCHITECTURE.md) for detailed documentation covering the layered architecture, database schema, state management patterns, routing, data flows, and technical debt inventory.
