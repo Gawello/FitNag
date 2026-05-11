@@ -144,7 +144,8 @@ features/<name>/
 - Triggers `PlanGenerator.generateAndSavePlan()` + `NagScheduler.requestPermission()` + `NagScheduler.scheduleNags()` on completion
 
 #### `settings/`
-- Equipment selection, schedule mode, notification windows editor, plan regeneration, health disclaimer
+- `SettingsScreen` — equipment selection, schedule mode, notification windows editor, plan regeneration, health disclaimer
+- `AboutScreen` (`/about`) — app version, credits & third-party attributions, copyright, health disclaimer, privacy summary, plus a "View licenses" button that opens Flutter's built-in `showLicensePage`
 
 #### `workouts/`
 - `ActiveWorkoutNotifier` (StateNotifierProvider.autoDispose) — manages in-progress session state
@@ -189,6 +190,7 @@ GoRouter with a `ShellRoute` for the persistent bottom navigation bar.
 /calendar                WorkoutCalendarScreen
 /league                  LeagueScreen
 /settings                SettingsScreen
+/about                   AboutScreen
 ```
 
 Bottom nav tabs: Home · Exercises · Measurements · Profile
