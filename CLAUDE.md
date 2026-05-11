@@ -78,7 +78,8 @@ Build for release: `flutter build appbundle --release` (Play Store) or `flutter 
 - **One concern per commit.** A schema migration + UI feature in the same commit is too much.
 - Never amend or force-push commits that have reached `main`.
 - When committing on Windows, expect `LF will be replaced by CRLF` warnings from git — these are harmless line-ending notices.
-- Generated platform-glue files (`linux/flutter/generated_*`, `macos/Flutter/GeneratedPluginRegistrant.swift`, `windows/flutter/generated_*`) often show up as modified after `flutter pub get` on a new machine. **Don't stage them by accident** — `git add` specific files, not `-A`.
+- **Phantom `M` status with empty diffs.** On this Windows working copy, 14 files reliably show as modified in `git status` but `git diff <file>` returns *no content* — only the CRLF warning. The set is: the 7 Drift-generated files (`lib/database/app_database.g.dart`, `lib/database/daos/*.g.dart`) and the 7 platform plugin registrants (`linux/flutter/generated_*`, `macos/Flutter/GeneratedPluginRegistrant.swift`, `windows/flutter/generated_*`). **Do not stage them.** Always run `git diff <file>` to confirm a "modified" file has real content before adding. Use `git add <specific paths>`, never `git add -A` or `git add .`.
+- **`.claude/` is gitignored.** It holds per-user / per-machine permission rules (`settings.local.json` with absolute paths like `C:\flutter\bin`). The project-level `CLAUDE.md` at the repo root is tracked and is the guidance file you are reading right now.
 
 ## Third-party content
 
