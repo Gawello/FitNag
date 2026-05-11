@@ -53,6 +53,16 @@ Tick volume = 0.4. Phase volume = 0.8 (intentionally louder so the user can feel
 
 Asset declaration is in [`pubspec.yaml`](../pubspec.yaml) under `assets/sounds/`.
 
+### Sound file provenance
+
+All six WAV files in `assets/sounds/` were generated procedurally with
+FFmpeg by the project authors — short synthesized tones (sine waves with
+amplitude envelopes), not recordings or third-party samples. The WAV
+`ISFT` header on every file reads `Lavf62.12.100` (libavformat),
+confirming this. Files are dedicated to the public domain. See
+[`assets/sounds/CREDITS.md`](../assets/sounds/CREDITS.md) for per-file
+specs and regeneration instructions.
+
 ---
 
 ## Haptics

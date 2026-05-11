@@ -150,4 +150,9 @@ FitNag is a fitness tracking tool, not medical advice. Consult a qualified healt
 
 ## License
 
-Private — all rights reserved.
+Proprietary — © 2026 Gaweł Banasik. All rights reserved. See [LICENSE](LICENSE).
+
+Third-party components (the `free-exercise-db` image dataset, Dart/Flutter
+packages, Material Icons, etc.) are used under their own licenses.
+See [THIRD_PARTY_LICENSES.md](THIRD_PARTY_LICENSES.md) for the full
+attribution list.

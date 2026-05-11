@@ -21,6 +21,11 @@ This folder is the **single source of truth** for how FitNag should behave. Each
 - [TROUBLESHOOTING.md](TROUBLESHOOTING.md) — common dev issues and fixes
 - [RELEASE.md](RELEASE.md) — pre-release checklist, build & sign, store submission
 
+### Licensing & attribution
+- [LICENSE](../LICENSE) — project license (proprietary, all rights reserved)
+- [THIRD_PARTY_LICENSES.md](../THIRD_PARTY_LICENSES.md) — third-party component attributions
+- [../assets/sounds/CREDITS.md](../assets/sounds/CREDITS.md) — origin of metronome WAV files
+
 ## How to keep these docs honest
 
 - **Spec, not narration.** State what the app does, with exact numbers and formulas. If the doc disagrees with the code, fix one of them — don't leave both.
