@@ -1,6 +1,7 @@
 import 'package:drift/drift.dart' hide Column;
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
+import 'package:go_router/go_router.dart';
 
 import '../../../core/constants/exercise_constants.dart';
 import '../../../core/theme/app_theme.dart';
@@ -144,6 +145,19 @@ class SettingsScreen extends ConsumerWidget {
                     ),
                   ],
                 ),
+              ),
+            ),
+            const SizedBox(height: 8),
+
+            // About
+            Card(
+              child: ListTile(
+                leading: const Icon(Icons.info_outline),
+                title: const Text('About'),
+                subtitle: const Text(
+                    'Version, licenses, privacy & credits'),
+                trailing: const Icon(Icons.chevron_right),
+                onTap: () => context.push('/about'),
               ),
             ),
             const SizedBox(height: 24),

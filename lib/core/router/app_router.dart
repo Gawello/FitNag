@@ -13,6 +13,7 @@ import '../../features/measurements/screens/add_measurement_screen.dart';
 import '../../features/gamification/screens/league_screen.dart';
 import '../../features/gamification/screens/profile_stats_screen.dart';
 import '../../features/settings/screens/settings_screen.dart';
+import '../../features/settings/screens/about_screen.dart';
 import '../../features/workouts/screens/workout_calendar_screen.dart';
 
 final _rootNavigatorKey = GlobalKey<NavigatorState>();
@@ -105,6 +106,10 @@ GoRouter createRouter({required bool onboardingComplete}) {
       GoRoute(
         path: '/settings',
         builder: (context, state) => const SettingsScreen(),
+      ),
+      GoRoute(
+        path: '/about',
+        builder: (context, state) => const AboutScreen(),
       ),
     ],
   );
